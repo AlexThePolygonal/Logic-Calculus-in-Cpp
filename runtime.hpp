@@ -14,8 +14,6 @@ namespace runtime {
 
 
     namespace detail {
-    template <class T> constexpr auto GetId() { return aux::next();}
-    template <class T, auto = [](){}> struct RenewT { constexpr RenewT() = default; constexpr RenewT(int) {};};
     template <class T> auto GetDyn();
     };
     template <class T> using Dyn = std::remove_reference_t<decltype(*detail::GetDyn<T>())>;
@@ -46,8 +44,7 @@ namespace runtime {
         using Parent = WithArity<DynImpl<T, void>, Node, T::arity>;
     public:
         using CexprT = T;
-        constexpr static unsigned type_id = detail::GetId<DynImpl<T, void>>() - 1;
-        template <class W> static constexpr bool CexprIs() { return type_id  == Dyn<W>::type_id; }
+        constexpr static unsigned type_id = cexpr::GetTypeid<T>();
 
 
         template <class ... Args>
@@ -64,8 +61,7 @@ namespace runtime {
         T::IntegerType val;
 
         using CexprT = T;
-        constexpr static unsigned type_id = detail::GetId<DynImpl<T, typename T::IntegerType>>() - 1;
-        template <class W> static constexpr bool CexprIs() { return type_id == Dyn<W>::type_id; }
+        constexpr static unsigned type_id = cexpr::GetTypeid<T>();
 
 
         template <class U, class ... Args>
@@ -81,7 +77,6 @@ namespace runtime {
         if constexpr (!cexpr::has_integer_value_v<T>) {
             return static_cast<DynImpl<T, void>*>(nullptr);
         }
-        // never called
     }
 
     template <class T, class ... Args>
@@ -97,7 +92,6 @@ namespace runtime {
 };
 
 
-template <class T> constexpr unsigned cexpr::GetTypeid() { return runtime::Dyn<T>::type_id; };
 
 
 

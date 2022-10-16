@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <type_traits>
+#include "cexpr_counter.hpp"
 #include <gmpxx.h>
 
 namespace cexpr {
@@ -24,7 +25,7 @@ namespace cexpr {
     struct And : Arity<2> {};
     struct Not : Arity<1> {};
 
-    template <class T> constexpr unsigned GetTypeid();
+    template <class T> constexpr unsigned GetTypeid() { return aux::next<void>() - 1;}
     template <class T> constexpr unsigned Id = GetTypeid<T>();
 };
 
