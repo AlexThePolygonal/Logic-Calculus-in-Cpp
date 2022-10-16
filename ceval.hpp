@@ -1,7 +1,11 @@
 #pragma once
 #include "runtime.hpp"
+#include "ops.hpp"
 
 namespace runtime {
+
+    namespace detail {
+    };
 
     template <size_t N>
     struct CevalInt {
@@ -21,6 +25,8 @@ namespace runtime {
             if (!node->Is<Cur>()) {
                 return false;
             }
+            static_assert(Cur::arity == sizeof...(Children));
+            // UB !!!!!!
             auto& cur = node->As<Cur>();
             unsigned int i = 0;
             return (Children::VerifyTyping(cur[i++]) &&... );
@@ -38,6 +44,8 @@ namespace runtime {
             if (!node->Is<Cur>()) {
                 return false;
             }
+            static_assert(Cur::arity == sizeof...(Children));
+            // UB !!!!!!
             auto& cur = node->As<Cur>();
             unsigned int i = 0;
             return (Children::VerifyTyping(cur[i++]) &&... );
