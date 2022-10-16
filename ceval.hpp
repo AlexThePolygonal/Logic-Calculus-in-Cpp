@@ -4,8 +4,6 @@
 
 namespace runtime {
 
-    namespace detail {
-    };
 
     template <size_t N>
     struct CevalInt {
@@ -26,9 +24,8 @@ namespace runtime {
                 return false;
             }
             static_assert(Cur::arity == sizeof...(Children));
-            // UB !!!!!!
             auto& cur = node->As<Cur>();
-            unsigned int i = 0;
+            unsigned i = 0;
             return (Children::VerifyTyping(cur[i++]) &&... );
         }
     };
@@ -38,17 +35,7 @@ namespace runtime {
             return new Dyn<Cur>(N, (Children::Eval())...);
         }
         static bool VerifyTyping(runtime::Node* node) {
-            if constexpr (std::is_same_v<Cur, cexpr::Any>) {
-                return true;
-            }
-            if (!node->Is<Cur>()) {
-                return false;
-            }
-            static_assert(Cur::arity == sizeof...(Children));
-            // UB !!!!!!
-            auto& cur = node->As<Cur>();
-            unsigned int i = 0;
-            return (Children::VerifyTyping(cur[i++]) &&... );
+            return Ceval<Cur, Children...>::VerifyTyping(node);
         }
     };
 
