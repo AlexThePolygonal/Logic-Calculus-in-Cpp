@@ -10,6 +10,22 @@
 #define MAKE_TEST(name, body) bool TEST_##name () {{body} return true;}
 #define RUN_TEST(name) { std::cout << (TEST_##name () ? std::string("TEST ") + #name + " passed! :)\n" : std::string("TEST ") + #name + " FAILED! :/\n"); }
 
+MAKE_TEST(ListTypeids,
+    std::cout << 
+    "cexpr::Id<cexpr::Any> = "     << cexpr::Id<cexpr::Any>     << '\n' <<
+    "cexpr::Id<cexpr::Implies> = " << cexpr::Id<cexpr::Implies> << '\n' <<
+    "cexpr::Id<cexpr::And> = "     << cexpr::Id<cexpr::And>     << '\n' <<
+    "cexpr::Id<cexpr::Or> = "      << cexpr::Id<cexpr::Or>      << '\n' <<
+    "cexpr::Id<cexpr::Not> = "     << cexpr::Id<cexpr::Not>     << '\n' <<
+    '\n';
+    std::set<unsigned> set;
+    set.insert(cexpr::Id<cexpr::Any>);
+    set.insert(cexpr::Id<cexpr::Implies>);
+    set.insert(cexpr::Id<cexpr::And>);
+    set.insert(cexpr::Id<cexpr::Or>);
+    set.insert(cexpr::Id<cexpr::Not>);
+    ASSERT(set.size() == 5);
+)
 MAKE_TEST(EasyIs, 
     {
     runtime::Node* ptr = new runtime::Dyn<cexpr::Implies>(nullptr, nullptr);
@@ -101,6 +117,7 @@ MAKE_TEST(EasyRecurse,
 
 int main() {
     std::cout << std::boolalpha;
+    RUN_TEST(ListTypeids)
     RUN_TEST(EasyIs)
     RUN_TEST(EasyCevalEval)
     RUN_TEST(EasyCevalVerify)
