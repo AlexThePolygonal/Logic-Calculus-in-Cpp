@@ -17,7 +17,7 @@ namespace cexpr {
 
 
 
-    struct Anything : Arity<0>, HasIntVal<unsigned> {};
+    struct Any : Arity<0>, HasIntVal<unsigned> {};
     
     struct Implies : Arity<2> {};
     struct Or : Arity<2> {};

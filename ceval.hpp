@@ -15,7 +15,7 @@ namespace runtime {
             return new Dyn<Cur>((Children::Eval())...);
         }
         static bool VerifyTyping(runtime::Node* node) {
-            if constexpr (std::is_same_v<Cur, cexpr::Anything>) {
+            if constexpr (std::is_same_v<Cur, cexpr::Any>) {
                 return true;
             }
             if (!node->Is<Cur>()) {
@@ -32,7 +32,7 @@ namespace runtime {
             return new Dyn<Cur>(N, (Children::Eval())...);
         }
         static bool VerifyTyping(runtime::Node* node) {
-            if constexpr (std::is_same_v<Cur, cexpr::Anything>) {
+            if constexpr (std::is_same_v<Cur, cexpr::Any>) {
                 return true;
             }
             if (!node->Is<Cur>()) {
@@ -49,7 +49,7 @@ namespace runtime {
 #define FORM_CEVAL_WITH_INT(T) template <size_t N = 0, class ... Args> using T = runtime::Ceval<cexpr::T, runtime::CevalInt<N>, Args...>;
 
 namespace ceval {
-    FORM_CEVAL_WITH_INT(Anything)
+    FORM_CEVAL_WITH_INT(Any)
     FORM_CEVAL(Implies)
     FORM_CEVAL(And)
     FORM_CEVAL(Not)

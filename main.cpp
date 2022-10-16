@@ -22,25 +22,25 @@ MAKE_TEST(EasyIs,
 )
 MAKE_TEST(EasyCevalEval,
     {
-        runtime::Node* ptr = ceval::Anything<3>::Eval();
-        ASSERT(ptr->Is<cexpr::Anything>() == true);
-        ASSERT(ptr->As<cexpr::Anything>().val == 3)
+        runtime::Node* ptr = ceval::Any<3>::Eval();
+        ASSERT(ptr->Is<cexpr::Any>() == true);
+        ASSERT(ptr->As<cexpr::Any>().val == 3)
         delete ptr;
     } 
     {   
         runtime::Node* ptr;
         {
         using namespace ceval;
-        ptr = (Implies<Anything<0>,Anything<0>>::Eval());
+        ptr = (Implies<Any<0>,Any<0>>::Eval());
         }
         {
         using namespace cexpr;
         ASSERT(ptr->Is<Implies>());
         auto& val = ptr->As<Implies>();
-        ASSERT(val[0]->Is<Anything>());
-        ASSERT(val[1]->Is<Anything>());
-        ASSERT((val[0]->As<Anything>().val == 0))
-        ASSERT((val[1]->As<Anything>().val == 0))
+        ASSERT(val[0]->Is<Any>());
+        ASSERT(val[1]->Is<Any>());
+        ASSERT((val[0]->As<Any>().val == 0))
+        ASSERT((val[1]->As<Any>().val == 0))
         }
         delete ptr;
     }
@@ -49,8 +49,8 @@ MAKE_TEST(EasyCevalVerify,
     {   
         runtime::Node* ptr;
         using namespace ceval;
-        ptr = (Implies<Implies<Anything<0>,Anything<0>>,Anything<0>>::Eval());
-        ASSERT((Implies<Anything<>,Anything<>>::VerifyTyping(ptr)))
+        ptr = (Implies<Implies<Any<0>,Any<0>>,Any<0>>::Eval());
+        ASSERT((Implies<Any<>,Any<>>::VerifyTyping(ptr)))
         delete ptr;
     }
 );
@@ -59,8 +59,8 @@ MAKE_TEST(EasyRecurse,
     {
         runtime::Node* ptr;
         using namespace ceval;
-        ptr = (Implies<Implies<Anything<0>, Anything<1>>, Anything<2>>::Eval());
-        auto res = ops::ListIds<cexpr::Anything>(ptr);
+        ptr = (Implies<Implies<Any<0>, Any<1>>, Any<2>>::Eval());
+        auto res = ops::ListIds<cexpr::Any>(ptr);
         ASSERT(res.size() == 3)
         ASSERT(res.contains(0))
         ASSERT(res.contains(1))
@@ -70,12 +70,31 @@ MAKE_TEST(EasyRecurse,
     {
         runtime::Node* ptr;
         using namespace ceval;
-        ptr = (Implies<Implies<Anything<0>, Anything<1>>, Anything<1>>::Eval());
-        auto res = ops::ListIds<cexpr::Anything>(ptr);
+        ptr = (Implies<Implies<Any<0>, Any<1>>, Any<1>>::Eval());
+        auto res = ops::ListIds<cexpr::Any>(ptr);
         ASSERT(res.size() == 2)
         ASSERT(res.contains(0))
         ASSERT(res.contains(1))
         delete ptr;
+    }
+    {
+        runtime::Node* ptr;
+        { using namespace ceval;
+        ptr = (Implies<Implies<Any<0>, Any<1>>, Any<1>>::Eval());
+        }
+        runtime::Node* ptr1 = ops::Clone(ptr);
+        ASSERT(ops::SyntacticEq(ptr, ptr1));
+        delete ptr;
+        { using namespace cexpr;
+        ASSERT(ptr1->Is<Implies>());
+        auto& impl1 = ptr1->As<Implies>();
+        ASSERT(impl1[0]->Is<Implies>());
+        ASSERT(impl1[1]->Is<Any>());
+        ASSERT(impl1[1]->As<Any>().val == 1);
+        ASSERT(impl1[0]->As<Implies>()[0]->As<Any>().val == 0);
+        ASSERT(impl1[0]->As<Implies>()[1]->As<Any>().val == 1);
+        }
+        delete ptr1;
     }
 )
 

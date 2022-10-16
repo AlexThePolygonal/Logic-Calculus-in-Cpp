@@ -75,10 +75,10 @@ namespace runtime {
     };
 
     template <class T> auto detail::GetDyn() {
-        if constexpr (std::is_base_of_v<cexpr::HasIntValBase, T>) {
+        if constexpr (cexpr::has_integer_value_v<T>) {
             return static_cast<DynImpl<T, typename T::IntegerType>*>(nullptr);
         }
-        if constexpr (!std::is_base_of_v<cexpr::HasIntValBase, T>) {
+        if constexpr (!cexpr::has_integer_value_v<T>) {
             return static_cast<DynImpl<T, void>*>(nullptr);
         }
         // never called
@@ -86,10 +86,10 @@ namespace runtime {
 
     template <class T, class ... Args>
     T* Clone(T* self, Args ... args) {
-        if constexpr (std::is_base_of_v<cexpr::HasIntValBase, typename T::CexprT>) {
+        if constexpr (cexpr::has_integer_value_v< typename T::CexprT>) {
             return new T(self->val, std::forward<Args>(args)...);
         }
-        if constexpr (!std::is_base_of_v<cexpr::HasIntValBase, typename T::CexprT>) {
+        if constexpr (!cexpr::has_integer_value_v<typename T::CexprT>) {
             return new T(std::forward<Args>(args)...);
         }
     }

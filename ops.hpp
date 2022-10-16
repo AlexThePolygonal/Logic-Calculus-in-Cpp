@@ -1,9 +1,42 @@
 #pragma once
 #include "runtime.hpp"
 #include <set>
+#include <map>
 
 
 namespace ops {
+
+    bool SyntacticEq(runtime::Node*, runtime::Node*);
+
+    template <class T>
+    bool SyntacticEqImpl(runtime::Dyn<T>& l, runtime::Dyn<T>& r) {
+        if constexpr (cexpr::has_integer_value_v<T>) {
+            if (l.val != r.val) {
+                return false;
+            }
+        }
+        for (unsigned i = 0; i < T::arity; i++) {
+            if (!SyntacticEq(l[i], r[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool SyntacticEq(runtime::Node* l, runtime::Node* r) {
+        if (l->cur_type_id != r->cur_type_id) {
+            return false;
+        }
+        using namespace cexpr;
+        switch (l->cur_type_id) {
+        case Id<Any> :     return SyntacticEqImpl<Any>    (l->As<Any>(),     r->As<Any>());
+        case Id<Implies> : return SyntacticEqImpl<Implies>(l->As<Implies>(), r->As<Implies>());
+        case Id<And> :     return SyntacticEqImpl<And>    (l->As<And>(),     r->As<And>());
+        case Id<Or> :      return SyntacticEqImpl<Or>     (l->As<Or>(),      r->As<Or>());
+        case Id<Not> :     return SyntacticEqImpl<Not>    (l->As<Not>(),     r->As<Not>());
+        default:  throw std::logic_error("ops::SyntacticEq error: unknown type id  " + std::to_string(l->cur_type_id));
+        }
+    }
 
     struct UnfoldIntoF {
         template <
@@ -32,7 +65,7 @@ namespace ops {
         using namespace cexpr;
 
         switch (cur_node->cur_type_id) {
-        case Id<Anything>: return UnfoldIntoF::AtIdx<F, Anything, Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Anything>()); 
+        case Id<Any>: return UnfoldIntoF::AtIdx<F, Any, Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Any>()); 
         case Id<Implies>:  return UnfoldIntoF::AtIdx<F, Implies,  Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Implies>());
         case Id<And>:      return UnfoldIntoF::AtIdx<F, And,      Res, &Recurse<F, Res>, 0>(f, &cur_node->As<And>());
         case Id<Or>:       return UnfoldIntoF::AtIdx<F, Or,       Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Or>());
@@ -47,7 +80,7 @@ namespace ops {
 
     template <class T>
     std::set<unsigned> ListIds(runtime::Node* _) {
-        static_assert(std::is_base_of_v<cexpr::HasIntValBase, T>);
+        static_assert(cexpr::has_integer_value_v<T>);
         auto lister = [](auto&& v, auto&&...args) -> std::set<unsigned> {
             std::set<unsigned> res;
             if constexpr (IsExample<decltype(*v), T>) {
@@ -60,11 +93,37 @@ namespace ops {
         return Recurse<decltype(lister), std::set<unsigned>>(lister, _);
     }
 
-    runtime::Node* Clone(runtime::Node* _) {
+    template <class T>
+    void RenameIds(runtime::Node* _, std::map<unsigned, unsigned> map) {
+        static_assert(cexpr::has_integer_value_v<T>);
+        auto renamer = [&map](auto&& v, auto&& ...) -> void {
+            if constexpr (IsExample<decltype(*v), T>) {
+                v->val = map[v->val];
+            }
+        };
+        Recurse<decltype(renamer), void>(renamer, _);
+    }
+
+    template <class T>
+    void SafeRenameIds(runtime::Node* _, std::map<unsigned, unsigned> map) {
+        static_assert(cexpr::has_integer_value_v<T>);
+        auto renamer = [&map](auto&& v, auto&& ...) -> void {
+            if constexpr (IsExample<decltype(*v), T>) {
+                v->val = map.at(v->val);
+            }
+        };
+        Recurse<decltype(renamer), void>(renamer, _);
+    } 
+
+    runtime::Node* CloneImpl(runtime::Node* _) {
         auto cloner = [](auto&& v, auto&&...args) -> runtime::Node* {
             return runtime::Clone(std::forward<std::remove_reference_t<decltype(v)>>(v),
             std::forward<std::remove_reference_t<decltype(args)>>(args) ...);
         };
         return Recurse<decltype(cloner), runtime::Node*>(cloner, _);
     }
+
+    template <class T> T* Clone(T* _) { return &(CloneImpl(_)-> template As<T>()); }
+    template <> runtime::Node* Clone(runtime::Node* _) { return CloneImpl(_); }
+
 }
