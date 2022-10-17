@@ -5,6 +5,7 @@
 #include "ceval.hpp"
 #include <memory>
 #include "ops.hpp"
+#include "laws.hpp"
 
 #define ASSERT(cond) if (!(cond)) {return false;}
 #define MAKE_TEST(name, body) bool TEST_##name () {{body} return true;}
@@ -113,6 +114,13 @@ MAKE_TEST(EasyRecurse,
         delete ptr1;
     }
 )
+MAKE_TEST(EasyPatternmatch,
+    using namespace ceval;
+    runtime::Node* ptr = (And<And<Any<0>, Any<1>>, And<Any<0>, Any<1>>>::Eval());
+    ASSERT((And<Any<0>, Any<1>>::Match(ptr)));
+    ASSERT((And<Any<0>, Any<0>>::Match(ptr)));
+    delete ptr;
+)
 
 
 int main() {
@@ -122,6 +130,7 @@ int main() {
     RUN_TEST(EasyCevalEval)
     RUN_TEST(EasyCevalVerify)
     RUN_TEST(EasyRecurse)
+    RUN_TEST(EasyPatternmatch)
 
 }
 

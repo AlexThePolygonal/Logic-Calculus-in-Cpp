@@ -8,6 +8,20 @@ namespace ops {
 
     bool SyntacticEq(runtime::Node*, runtime::Node*);
 
+    struct UnfoldIntoSyneq {
+        template <unsigned arity, unsigned idx, class T>
+        constexpr static inline bool AtIdx(runtime::Dyn<T>& l, runtime::Dyn<T>& r) {
+            if constexpr (idx == arity) {
+                return true;
+            }
+            if constexpr (idx < arity) {
+                return SyntacticEq(l[idx],r[idx]) && AtIdx<arity, idx+1, T>(l,r);
+            }
+        }
+    };
+
+
+
     template <class T>
     bool SyntacticEqImpl(runtime::Dyn<T>& l, runtime::Dyn<T>& r) {
         if constexpr (cexpr::has_integer_value_v<T>) {
@@ -15,12 +29,7 @@ namespace ops {
                 return false;
             }
         }
-        for (unsigned i = 0; i < T::arity; i++) {
-            if (!SyntacticEq(l[i], r[i])) {
-                return false;
-            }
-        }
-        return true;
+        return UnfoldIntoSyneq::AtIdx<T::arity, 0, T>(l,r);
     }
 
     bool SyntacticEq(runtime::Node* l, runtime::Node* r) {
@@ -65,7 +74,7 @@ namespace ops {
         using namespace cexpr;
 
         switch (cur_node->cur_type_id) {
-        case Id<Any>: return UnfoldIntoF::AtIdx<F, Any, Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Any>()); 
+        case Id<Any>:      return UnfoldIntoF::AtIdx<F, Any,      Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Any>()); 
         case Id<Implies>:  return UnfoldIntoF::AtIdx<F, Implies,  Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Implies>());
         case Id<And>:      return UnfoldIntoF::AtIdx<F, And,      Res, &Recurse<F, Res>, 0>(f, &cur_node->As<And>());
         case Id<Or>:       return UnfoldIntoF::AtIdx<F, Or,       Res, &Recurse<F, Res>, 0>(f, &cur_node->As<Or>());

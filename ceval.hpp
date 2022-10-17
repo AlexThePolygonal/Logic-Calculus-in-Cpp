@@ -28,6 +28,20 @@ namespace runtime {
             unsigned i = 0;
             return (Children::VerifyTyping(cur[i++]) &&... );
         }
+
+        static bool MatchImpl(runtime::Node* node, std::map<unsigned, runtime::Node*>& m) {
+            if (!node->Is<Cur>()) {
+                return false;
+            }
+            static_assert(Cur::arity == sizeof ... (Children));
+            auto& cur = node->As<Cur>();
+            unsigned i = 0;
+            return (Children::MatchImpl(cur[i++], m) &&... );
+        }
+        static bool Match(runtime::Node* _) {
+            std::map<unsigned, runtime::Node*> m;
+            return MatchImpl(_, m);
+        }
     };
     template <class Cur, size_t N,class ... Children>
     struct Ceval<Cur, CevalInt<N>, Children...> {
@@ -37,6 +51,22 @@ namespace runtime {
         static bool VerifyTyping(runtime::Node* node) {
             return Ceval<Cur, Children...>::VerifyTyping(node);
         }
+        static bool MatchImpl(runtime::Node* node, std::map<unsigned, runtime::Node*>& m) {
+            if constexpr (std::is_same_v<Cur, cexpr::Any>) {
+                if (m.contains(N)) {
+                    return ops::SyntacticEq(m[N], node);
+                }
+                m[N] = node;
+                return true;
+            }
+            return Ceval<Cur, Children...>::MatchImpl(node, m);
+        }
+        static bool Match(runtime::Node* _) {
+            std::map<unsigned, runtime::Node*> m;
+            return MatchImpl(_, m);
+        }
+
+
     };
 
 };

@@ -1,0 +1,4 @@
+#ignore pdf manuals
+*.pdf
+#ignore logs
+*.log
