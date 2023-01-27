@@ -2,3 +2,5 @@
 *.pdf
 #ignore logs
 *.log
+#ignore vscode configs
+.vscode
